@@ -64,7 +64,7 @@ var reply_group = function(bot, msg) {
 							var result_msg = '@' + bot.clientName + ' ';
 							if (err) {
 								result_msg += err;
-								result_msg += '\n发生了一些错误，可以尝试向良辰寻求帮助'
+								result_msg += '\n可能发生了一些错误，可以尝试向良辰寻求帮助'
 							}else{
 								result_msg += '打包完成！'
 							}
@@ -124,6 +124,10 @@ function make_package (project, type, description, version, cb) {
 		cb('[ERROR]打包参数有误');
 		return;
 	}
+	if (type < 1 || type > 3) {
+		cb('[ERROR]打包参数-类型编号有误，beta阶段暂关闭正式版的发布');
+		return;
+	}
 	var cmdStr = 'bash';
 	var args = ['../autopack/autopack.sh', '-a', '-p', project, '-t', type];
 	if (description != null) {
@@ -138,11 +142,11 @@ function make_package (project, type, description, version, cb) {
 	pack_process = ch_process.spawn(cmdStr, args);
 
 	pack_process.stdout.on('data', function(data) {
-		console.log('stdout: ' + data);
+		console.log('' + data);
 	});
 
 	pack_process.stderr.on('data', function(data) {
-		console.log('stderr: ' + data);
+		console.log('[STDERR]:\n' + data);
 		if (!stringContains(data, '[IDEDistributionLogging _createLoggingBundleAtPath:]')) {
 			error_msg = data;
 		};
