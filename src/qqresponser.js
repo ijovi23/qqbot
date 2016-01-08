@@ -143,7 +143,9 @@ function make_package (project, type, description, version, cb) {
 
 	pack_process.stderr.on('data', function(data) {
 		console.log('stderr: ' + data);
-		error_msg = data;
+		if (!stringContains(data, '[IDEDistributionLogging _createLoggingBundleAtPath:]')) {
+			error_msg = data;
+		};
 	});
 
 	pack_process.on('exit', function(code) {
