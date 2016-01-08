@@ -5,6 +5,7 @@
   var Log = require('log');
   var Dispatcher = require('./dispatcher');
   var log = new Log('debug');
+  var responser = require('./qqresponser');
 
   var MsgType = {
     Default: 'message',
@@ -36,6 +37,8 @@
       this.api = api;
       this.dispatcher = new Dispatcher(this.config.plugins, this);
       this.started = true;
+      this.busy = false;
+      this.clientName = '';
     }
 
     QQBot.prototype.save_group_member = function(group, info) {
@@ -579,6 +582,7 @@
         }
         try {
           log.debug("[群组消息]", "[" + msg.from_group.name + "] " + msg.from_user.nick + ":" + msg.content + " " + msg.time);
+          responser.reply_group(this, msg);
         } catch (undefined) {}
       } else if (msg_type === MsgType.Discuss) {
         msg.from_did = value.did;
