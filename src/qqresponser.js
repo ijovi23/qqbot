@@ -131,10 +131,10 @@ function make_package (project, type, description, version, cb) {
 	var cmdStr = 'bash';
 	var args = ['../autopack/autopack.sh', '-a', '-p', project, '-t', type];
 	if (description != null) {
-		args.concat('-d', description);
+		args = args.concat('-d', description);
 	}
 	if (version != null) {
-		args.concat('-v', version);
+		args = args.concat('-v', version);
 	}
 
 	var error_msg = null;
