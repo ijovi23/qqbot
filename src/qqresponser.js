@@ -21,11 +21,9 @@ var reply_group = function(bot, msg) {
 				'　　3 - 雅迪\n'+
 				'　　4 - 多德福\n'+
 				'　　5 - 千家万纺\n'+
-				'【类型编号】\n'+
-				'　　1 - 内网测试\n'+
-				'　　2 - 外网测试\n'+
-				'　　3 - 客户验收\n'+
-				'　　4 - 生产环境\n'+
+				'【类型编号】接口服务器类型的编号\n'+
+				'　　打包指令不发送类型编号即可查询相应项目的API_Server列表\n'+
+				'　　例如发送：良辰 打包 1\n'+
 				'【更新描述】版本更新说明\n'+
 				'【版本号】版本号格式为0.0.0(正式)或0.0.0-yyMMdd00(测试)，测试版建议使用自动生成的版本号';
 			var helpMsg2 = '【举个栗子】\n'+
@@ -51,32 +49,49 @@ var reply_group = function(bot, msg) {
 			}else{
 				var arg_project = contentArray[2];
 				var arg_type = contentArray[3];
-				var arg_description = contentArray[4];
-				var arg_version = contentArray[5];
 
-				bot.busy = true;
-				bot.clientName = msg.from_user.nick;
-				bot.send_message_to_group(
-					msg.from_gid,
-					'打包去了，完成时通知你',
-					function(){
-						make_package(arg_project, arg_type, arg_description, arg_version, function(err) {
-							var result_msg = '@' + bot.clientName + ' ';
-							if (err) {
-								result_msg += err;
-								result_msg += '\n可能发生了一些错误，可以尝试向良辰寻求帮助'
-							}else{
-								result_msg += '打包完成！'
-							}
-							bot.busy = false;
-							bot.send_message_to_group(
+				if (hasText(arg_project) && !hasText(arg_type)) {
+					var result_msg = '';
+					show_projectHelp(arg_project, function(err, data){
+						if (err) {
+							result_msg += err;
+						}else{
+							result_msg += data;
+						}
+						bot.send_message_to_group(
 								msg.from_gid,
 								result_msg,
 								function(){}
 							);
-						});
-					}
-				);
+					});
+				}else{
+					var arg_description = contentArray[4];
+					var arg_version = contentArray[5];
+
+					bot.busy = true;
+					bot.clientName = msg.from_user.nick;
+					bot.send_message_to_group(
+						msg.from_gid,
+						'打包去了，完成时通知你',
+						function(){
+							make_package(arg_project, arg_type, arg_description, arg_version, function(err) {
+								var result_msg = '@' + bot.clientName + ' ';
+								if (err) {
+									result_msg += err;
+									result_msg += '\n可能发生了一些错误，可以尝试向良辰寻求帮助'
+								}else{
+									result_msg += '打包完成！'
+								}
+								bot.busy = false;
+								bot.send_message_to_group(
+									msg.from_gid,
+									result_msg,
+									function(){}
+								);
+							});
+						}
+					);
+				}
 			}
 		}
 		else if (contentArray[1] == '你好') {
@@ -119,15 +134,19 @@ function stringContains (str1, str2) {
 	}
 }
 
+function hasText (str) {
+	if (str != null && typeof(str) == 'string' && str.length > 0) {
+		return true;
+	}
+	return false;
+}
+
 function make_package (project, type, description, version, cb) {
-	if (project == null || type == null) {
+	if (!hasText(project) || !hasText(type)) {
 		cb('[ERROR]打包参数有误');
 		return;
 	}
-	if (type < 1 || type > 3) {
-		cb('[ERROR]打包参数-类型编号有误，beta阶段暂关闭正式版的发布');
-		return;
-	}
+	
 	var cmdStr = 'bash';
 	var args = ['../autopack/autopack.sh', '-a', '-p', project, '-t', type];
 	if (description != null) {
@@ -139,7 +158,7 @@ function make_package (project, type, description, version, cb) {
 
 	var error_msg = null;
 
-	pack_process = ch_process.spawn(cmdStr, args);
+	var pack_process = ch_process.spawn(cmdStr, args);
 
 	pack_process.stdout.on('data', function(data) {
 		console.log('' + data);
@@ -156,6 +175,28 @@ function make_package (project, type, description, version, cb) {
 		cb(error_msg);
 	});
 }
+
+function show_projectHelp (project, cb) {
+	if (!hasText(project)) {
+		cb('[ERROR]project参数有误');
+		return;
+	}
+
+	var cmdStr = '';
+	cmdStr += 'source ../autopack/project_list.sh';
+	cmdStr += ' && PROJ_PATH=${PROJECT_LIST['+ project +']}';
+	cmdStr += ' && source ../$PROJ_PATH/autopack_config.sh';
+	cmdStr += ' && echo $HelpText';
+
+	ch_process.exec(cmdStr, function(error, stdout, stderr) {
+		if (error) {
+			cb('' + error);
+		}else{
+			cb(null, stdout);
+		}
+	});
+}
+
 
 module.exports = {
 	reply_group: reply_group
