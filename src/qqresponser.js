@@ -1,4 +1,5 @@
 var ch_process = require('child_process');
+var turing = require('./turingBot');
 
 var reply_group = function(bot, msg) {
 	var msg_content = msg.content.replace(/\s+/g, ' '); //多个空格合并
@@ -93,34 +94,46 @@ var reply_group = function(bot, msg) {
 				}
 			}
 		}
-		else if (contentArray[1] == '你好') {
-			bot.send_message_to_group(
-				msg.from_gid,
-				msg.from_user.nick +' 你好',
-				function(){}
-				);
-		}
-		else if (contentArray[1] == '来单挑') {
-			bot.send_message_to_group(
-				msg.from_gid,
-				'良辰最喜欢对那些自认能力出众的人出手，你若是感觉你有实力和我玩，良辰不介意奉陪到底',
-				function(){}
-				);
-		}
-		else if (contentArray[1] != null && contentArray[1].indexOf('我是') == 0) {
-			var temp_msg = contentArray[1];
-			bot.send_message_to_group(
-				msg.from_gid,
-				'就算你是'+ temp_msg.substring(2, temp_msg.length) +'又如何？',
-				function(){}
-				);
-		}
+		// else if (contentArray[1] == '你好') {
+		// 	bot.send_message_to_group(
+		// 		msg.from_gid,
+		// 		msg.from_user.nick +' 你好',
+		// 		function(){}
+		// 		);
+		// }
+		// else if (contentArray[1] == '来单挑') {
+		// 	bot.send_message_to_group(
+		// 		msg.from_gid,
+		// 		'良辰最喜欢对那些自认能力出众的人出手，你若是感觉你有实力和我玩，良辰不介意奉陪到底',
+		// 		function(){}
+		// 		);
+		// }
+		// else if (contentArray[1] != null && contentArray[1].indexOf('我是') == 0) {
+		// 	var temp_msg = contentArray[1];
+		// 	bot.send_message_to_group(
+		// 		msg.from_gid,
+		// 		'就算你是'+ temp_msg.substring(2, temp_msg.length) +'又如何？',
+		// 		function(){}
+		// 		);
+		// }
 		else {
-			bot.send_message_to_group(
-				msg.from_gid,
-				'在下叶良辰',
-				function(){}
-				);
+			contentArray.shift();
+			var msg_to_turing = contentArray.join(' ');
+			turing.sendMsg(msg_to_turing, function (err, reply) {
+				if (err) {
+					bot.send_message_to_group(
+						msg.from_gid,
+						'[ERROR]' + err,
+						function(){}
+						);
+				}else{
+					bot.send_message_to_group(
+						msg.from_gid,
+						reply,
+						function(){}
+						);
+				}
+			});
 		}
 	}
 }
